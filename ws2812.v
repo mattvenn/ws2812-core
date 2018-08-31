@@ -33,6 +33,8 @@ module ws2812 (
     parameter t_reset = 600;
     localparam t_period = t_on + t_off;
 
+    initial data = 0;
+
 
     reg [23:0] rgb;
 
@@ -125,6 +127,9 @@ module ws2812 (
 
             if(state == STATE_DATA)
                 assert(bit_counter <= t_period);
+
+            if(state == STATE_RESET)
+                assert(data == 0);
         end
             
     `endif
