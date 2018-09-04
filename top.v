@@ -14,6 +14,10 @@ module top (
     always @(posedge clk)
         count <= count + 1;
 
-    ws2812 #(.leds(7)) ws2812_inst(.data(ws_data), .clk(clk), .reset(reset), .red(count[23:16]), .green(8'd0), .blue(255 - count[23:16]));
+    reg [23:0] led_rgb_data = 24'h00_00_10;
+    reg [7:0] led_num = 0;
+    wire led_write = &count;
+
+    ws2812 #(.NUM_LEDS(4)) ws2812_inst(.data(ws_data), .clk(clk), .reset(reset), .rgb_data(led_rgb_data), .led_num(led_num), .write(led_write));
 
 endmodule

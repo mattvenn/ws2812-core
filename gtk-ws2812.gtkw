@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Tue Sep  4 15:17:35 2018
+[*] Tue Sep  4 16:59:06 2018
 [*]
 [dumpfile] "/home/matt/work/fpga/ws2812/test.vcd"
-[dumpfile_mtime] "Tue Sep  4 15:17:09 2018"
-[dumpfile_size] 2240
+[dumpfile_mtime] "Tue Sep  4 16:58:24 2018"
+[dumpfile_size] 2777
 [savefile] "/home/matt/work/fpga/ws2812/gtk-ws2812.gtkw"
-[timestart] 6108
-[size] 2068 1042
+[timestart] 24705
+[size] 2308 1042
 [pos] -1 -1
-*-8.028861 6939 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-8.028861 7335 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [sst_width] 253
 [signals_width] 336

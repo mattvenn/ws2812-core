@@ -20,7 +20,7 @@ module ws2812 (
         * t on  800ns
         * t off 400ns
 
-    end of frame/reset is 50us
+    end of frame/reset is > 50us
 
     clock period at 12MHz = 83ns:
         * t on  counter = 10, makes t_on  = 833ns
@@ -30,7 +30,7 @@ module ws2812 (
     */
     parameter t_on = 10;
     parameter t_off = 5;
-    parameter t_reset = 600;
+    parameter t_reset = 800;
     localparam t_period = t_on + t_off;
 
     initial data = 0;
@@ -51,13 +51,19 @@ module ws2812 (
         if(write)
             led_reg[led_num] <= rgb_data;
 
+    integer i;
+
     always @(posedge clk)
         // reset
         if(reset) begin
+            // initialise led data to 0
+            for (i=0; i<8; i=i+1)
+                led_reg[i] <= 0;
+
             state <= STATE_RESET;
             bit_counter <= t_reset;
             rgb_counter <= 23;
-            led_counter <= NUM_LEDS;
+            led_counter <= NUM_LEDS - 1;
             data <= 0;
 
         // state machine to generate the data output
@@ -66,7 +72,7 @@ module ws2812 (
             STATE_RESET: begin
                 // register the input values
                 rgb_counter <= 5'd23;
-                led_counter <= NUM_LEDS;
+                led_counter <= NUM_LEDS - 1;
                 data <= 0;
 
                 bit_counter <= bit_counter - 1;
@@ -99,7 +105,7 @@ module ws2812 (
 
                         if(led_counter == 0) begin
                             state <= STATE_RESET;
-                            led_counter <= NUM_LEDS;
+                            led_counter <= NUM_LEDS - 1;
                             bit_counter <= t_reset;
                         end
                     end
@@ -128,7 +134,7 @@ module ws2812 (
         always @(posedge clk) begin
             assert(bit_counter <= t_reset);
             assert(rgb_counter <= 23);
-            assert(led_counter <= NUM_LEDS);
+            assert(led_counter <= NUM_LEDS - 1);
 
             if(state == STATE_DATA)
                 assert(bit_counter <= t_period);
@@ -144,7 +150,7 @@ module ws2812 (
         // check that writes end up in the led register
         always @(posedge clk)
             if (f_past_valid)
-                if($past(write))
+                if(!$past(reset) && $past(write))
                     assert(led_reg[$past(led_num)] == $past(rgb_data));
             
     `endif

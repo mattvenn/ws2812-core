@@ -13,21 +13,22 @@ module test;
      # 20
      reset <= 0;
      # 10
-     led_num <= 1;
-     rgb_data <= 24'hAABBCC;
+     led_num <= 0;
+     rgb_data <= 24'h00_00_10;
      write <= 1;
      # 2;
      write <= 0;
 
-     wait(ws2812_inst.led_counter == 0);
-     
-     wait(ws2812_inst.state == 1);
 
-     wait(ws2812_inst.led_counter == 0);
+     repeat (6) begin
+         wait(ws2812_inst.led_counter == 0);
+         wait(ws2812_inst.state == 1);
+     end
+
      $finish;
   end
 
-  ws2812 #(.leds(2))  ws2812_inst(.clk(clk), .reset(reset), .rgb_data(rgb_data), .led_num(led_num), .write(write));
+  ws2812 #(.NUM_LEDS(4))  ws2812_inst(.clk(clk), .reset(reset), .rgb_data(rgb_data), .led_num(led_num), .write(write));
   /* Make a regular pulsing clock. */
   always #1 clk = !clk;
 
