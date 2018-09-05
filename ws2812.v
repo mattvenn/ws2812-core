@@ -57,7 +57,7 @@ module ws2812 (
         // reset
         if(reset) begin
             // initialise led data to 0
-            for (i=0; i<8; i=i+1)
+            for (i=0; i<NUM_LEDS; i=i+1)
                 led_reg[i] <= 0;
 
             state <= STATE_RESET;
