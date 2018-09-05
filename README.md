@@ -1,17 +1,21 @@
 # WS2812 core
 
-very simple single LED driver. Demonstrates timing is working.
+very simple WS2812 LED driver written in Verilog. Demonstrates timing is working.
 
 * Parameter NUM_LEDS sets the number of LEDs in the chain (up to 255)
-* Data for each LED is loaded with the write signal
 * Data is RGB format, 24 bits.
+* Data for each LED is loaded with the write signal
 * expects clock to be 12 MHz
+
+![ws2812](ws2812.jpg)
 
 # Makefile
 
     make debug
 
-Use iverilog to run the testbench and show the results
+Use iverilog to run the testbench and show the results with gtkwave
+
+![gtkwave](gtkwave.png)
 
     make formal
 
