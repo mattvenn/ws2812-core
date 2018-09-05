@@ -9,7 +9,7 @@ module test;
   initial begin
      $dumpfile("test.vcd");
      $dumpvars(0,test);
-     $dumpvars(1,ws2812_inst.led_reg[1]);
+     $dumpvars(1,ws2812_inst.led_reg[0]);
      # 20
      reset <= 0;
      # 10

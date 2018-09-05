@@ -2,8 +2,10 @@
 
 very simple single LED driver. Demonstrates timing is working.
 
-Parameter leds can set the number of LEDs in the chain. All LEDs
-receive the same data.
+* Parameter NUM_LEDS sets the number of LEDs in the chain (up to 255)
+* Data for each LED is loaded with the write signal
+* Data is RGB format, 24 bits.
+* expects clock to be 12 MHz
 
 # Makefile
 
