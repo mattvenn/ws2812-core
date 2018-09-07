@@ -20,12 +20,12 @@ module ws2812 (
         * t on  800ns
         * t off 400ns
 
-    end of frame/reset is > 50us
+    end of frame/reset is > 50us. I had a bug at 50us, so increased to 65us
 
     clock period at 12MHz = 83ns:
         * t on  counter = 10, makes t_on  = 833ns
         * t off counter = 5,  makes t_off = 416ns
-        * reset is 600 counts
+        * reset is 800 counts             = 65us
 
     */
     parameter t_on = 10;
@@ -136,11 +136,17 @@ module ws2812 (
             assert(rgb_counter <= 23);
             assert(led_counter <= NUM_LEDS - 1);
 
-            if(state == STATE_DATA)
+            if(state == STATE_DATA) begin
                 assert(bit_counter <= t_period);
+                // led counter decrements
+                if($past(state) == STATE_DATA && $past(rgb_counter) == 0)
+                    assert(led_counter == $past(led_counter) - 1);
+            end
 
-            if(state == STATE_RESET)
+            if(state == STATE_RESET) begin
                 assert(data == 0);
+                assert(bit_counter <= t_reset);
+            end
         end
 
         // leds < NUM_LEDSs
