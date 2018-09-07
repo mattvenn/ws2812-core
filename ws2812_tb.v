@@ -14,7 +14,7 @@ module test;
      reset <= 0;
      # 10
      led_num <= 0;
-     rgb_data <= 24'h00_00_10;
+     rgb_data <= 24'hAA_CC_DD;
      write <= 1;
      # 2;
      write <= 0;
