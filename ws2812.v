@@ -139,7 +139,7 @@ module ws2812 (
             if(state == STATE_DATA) begin
                 assert(bit_counter <= t_period);
                 // led counter decrements
-                if($past(state) == STATE_DATA && $past(rgb_counter) == 0)
+                if($past(state) == STATE_DATA && $past(rgb_counter) == 0 && $past(bit_counter) == 0)
                     assert(led_counter == $past(led_counter) - 1);
             end
 
