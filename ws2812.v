@@ -129,6 +129,7 @@ module ws2812 (
                 if ($past(reset)) begin
                     assert(bit_counter == t_reset);
                     assert(rgb_counter == 23);
+                    assert(led_reg[$past(led_num)] == 0);
                 end
 
         always @(posedge clk) begin
