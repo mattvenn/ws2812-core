@@ -51,19 +51,27 @@ module ws2812 (
 
     reg [1:0] state = STATE_RESET;
 
+    reg [23:0] led_color;
+
     // handle reading new led data
-    always @(posedge clk)
+    always @(posedge clk) begin
         if(write)
             led_reg[led_num] <= rgb_data;
-
+        led_color <= led_reg[led_counter];
+    end
     integer i;
 
     always @(posedge clk)
         // reset
         if(reset) begin
             // initialise led data to 0
+	    // comment out to infer BRAM, but required to pass formal
+            `ifdef `INFER_BRAM
+	    $display("Bypassing memory reset to allow BRAM");
+	    `else
             for (i=0; i<NUM_LEDS; i=i+1)
                 led_reg[i] <= 0;
+	    `endif
 
             state <= STATE_RESET;
             bit_counter <= t_reset;
@@ -90,7 +98,7 @@ module ws2812 (
 
             STATE_DATA: begin
                 // output the data
-                if(led_reg[led_counter][rgb_counter])
+                if(led_color[rgb_counter])
                     data <= bit_counter > (t_period - t_on);
                 else
                     data <= bit_counter > (t_period - t_off);
