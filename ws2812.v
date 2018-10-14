@@ -1,4 +1,7 @@
 `default_nettype none
+
+//`define NO_MEM_RESET 1
+
 module ws2812 (
     input [23:0] rgb_data,
     input [7:0] led_num,
@@ -59,16 +62,19 @@ module ws2812 (
             led_reg[led_num] <= rgb_data;
         led_color <= led_reg[led_counter];
     end
+
     integer i;
 
     always @(posedge clk)
         // reset
         if(reset) begin
-            // initialise led data to 0
-	    // comment out to infer BRAM, but required to pass formal
-            `ifdef `INFER_BRAM
+	    //  In order to infer BRAM, can't have a reset condition
+	    //  like this. But it will fail formal if you don't reset
+	    //  it.
+            `ifdef NO_MEM_RESET
 	    $display("Bypassing memory reset to allow BRAM");
 	    `else
+            // initialise led data to 0
             for (i=0; i<NUM_LEDS; i=i+1)
                 led_reg[i] <= 0;
 	    `endif
