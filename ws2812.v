@@ -9,6 +9,8 @@ module ws2812 (
     output reg data
 );
     parameter NUM_LEDS = 8;
+    parameter CLK_MHZ = 12;
+    localparam LED_BITS = $clog2(NUM_LEDS);
 
     /*
     great information here:
@@ -22,23 +24,26 @@ module ws2812 (
 
     end of frame/reset is > 50us. I had a bug at 50us, so increased to 65us
 
+    More recent ws2812 parts require reset > 280us. See: https://blog.particle.io/2017/05/11/heads-up-ws2812b-neopixels-are-about-to-change/
+
     clock period at 12MHz = 83ns:
         * t on  counter = 10, makes t_on  = 833ns
         * t off counter = 5,  makes t_off = 416ns
         * reset is 800 counts             = 65us
 
     */
-    parameter t_on = 10;
-    parameter t_off = 5;
-    parameter t_reset = 800;
-    localparam t_period = t_on + t_off;
+    parameter t_on = $rtoi($ceil(CLK_MHZ*900/1000));
+    parameter t_off = $rtoi($ceil(CLK_MHZ*350/1000));
+    parameter t_reset = $rtoi($ceil(CLK_MHZ*280));
+    localparam t_period = $rtoi($ceil(CLK_MHZ*1250/1000));
+    localparam COUNT_BITS = $clog2(t_reset);
 
     initial data = 0;
 
     reg [23:0] led_reg [NUM_LEDS-1:0];
 
-    reg [3:0] led_counter = 0;
-    reg [9:0] bit_counter = 0;
+    reg [LED_BITS-1:0] led_counter = 0;
+    reg [COUNT_BITS-1:0] bit_counter = 0;
     reg [4:0] rgb_counter = 0;
 
     localparam STATE_DATA  = 0;
@@ -95,7 +100,7 @@ module ws2812 (
 
                 // after each bit, increment rgb counter
                 if(bit_counter == 0) begin
-                    bit_counter <= t_on + t_off;
+                    bit_counter <= t_period;
                     rgb_counter <= rgb_counter - 1;
 
                     if(rgb_counter == 0) begin
