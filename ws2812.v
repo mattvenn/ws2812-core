@@ -1,4 +1,7 @@
 `default_nettype none
+
+//`define NO_MEM_RESET 1
+
 module ws2812 (
     input [23:0] rgb_data,
     input [7:0] led_num,
@@ -9,6 +12,8 @@ module ws2812 (
     output reg data
 );
     parameter NUM_LEDS = 8;
+    parameter CLK_MHZ = 12;
+    localparam LED_BITS = $clog2(NUM_LEDS);
 
     /*
     great information here:
@@ -22,23 +27,26 @@ module ws2812 (
 
     end of frame/reset is > 50us. I had a bug at 50us, so increased to 65us
 
+    More recent ws2812 parts require reset > 280us. See: https://blog.particle.io/2017/05/11/heads-up-ws2812b-neopixels-are-about-to-change/
+
     clock period at 12MHz = 83ns:
         * t on  counter = 10, makes t_on  = 833ns
         * t off counter = 5,  makes t_off = 416ns
         * reset is 800 counts             = 65us
 
     */
-    parameter t_on = 10;
-    parameter t_off = 5;
-    parameter t_reset = 800;
-    localparam t_period = t_on + t_off;
+    parameter t_on = $rtoi($ceil(CLK_MHZ*900/1000));
+    parameter t_off = $rtoi($ceil(CLK_MHZ*350/1000));
+    parameter t_reset = $rtoi($ceil(CLK_MHZ*280));
+    localparam t_period = $rtoi($ceil(CLK_MHZ*1250/1000));
+    localparam COUNT_BITS = $clog2(t_reset);
 
     initial data = 0;
 
     reg [23:0] led_reg [NUM_LEDS-1:0];
 
-    reg [3:0] led_counter = 0;
-    reg [9:0] bit_counter = 0;
+    reg [LED_BITS-1:0] led_counter = 0;
+    reg [COUNT_BITS-1:0] bit_counter = 0;
     reg [4:0] rgb_counter = 0;
 
     localparam STATE_DATA  = 0;
@@ -46,19 +54,30 @@ module ws2812 (
 
     reg [1:0] state = STATE_RESET;
 
+    reg [23:0] led_color;
+
     // handle reading new led data
-    always @(posedge clk)
+    always @(posedge clk) begin
         if(write)
             led_reg[led_num] <= rgb_data;
+        led_color <= led_reg[led_counter];
+    end
 
     integer i;
 
     always @(posedge clk)
         // reset
         if(reset) begin
+	    //  In order to infer BRAM, can't have a reset condition
+	    //  like this. But it will fail formal if you don't reset
+	    //  it.
+            `ifdef NO_MEM_RESET
+	    $display("Bypassing memory reset to allow BRAM");
+	    `else
             // initialise led data to 0
             for (i=0; i<NUM_LEDS; i=i+1)
                 led_reg[i] <= 0;
+	    `endif
 
             state <= STATE_RESET;
             bit_counter <= t_reset;
@@ -85,7 +104,7 @@ module ws2812 (
 
             STATE_DATA: begin
                 // output the data
-                if(led_reg[led_counter][rgb_counter])
+                if(led_color[rgb_counter])
                     data <= bit_counter > (t_period - t_on);
                 else
                     data <= bit_counter > (t_period - t_off);
@@ -95,7 +114,7 @@ module ws2812 (
 
                 // after each bit, increment rgb counter
                 if(bit_counter == 0) begin
-                    bit_counter <= t_on + t_off;
+                    bit_counter <= t_period;
                     rgb_counter <= rgb_counter - 1;
 
                     if(rgb_counter == 0) begin
@@ -129,6 +148,7 @@ module ws2812 (
                 if ($past(reset)) begin
                     assert(bit_counter == t_reset);
                     assert(rgb_counter == 23);
+                    assert(led_reg[$past(led_num)] == 0);
                 end
 
         always @(posedge clk) begin
