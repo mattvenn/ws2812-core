@@ -1,7 +1,7 @@
-PACKAGE = ct256
+PACKAGE = cm81
 DEVICE = hx8k
 PROJ = ws2812
-PIN_DEF = 8k.pcf
+PIN_DEF = tinyfpga.pcf
 SHELL := /bin/bash # Use bash syntax
 BUILD_DIR = ./build
 SRC_DIR = ./
@@ -22,7 +22,7 @@ $(BUILD_DIR):
 
 # rules for building the blif file
 $(BUILD_DIR)/%.blif: $(SRC) | $(BUILD_DIR)
-	yosys -p "synth_ice40 -top top -blif $@" $^ | tee $(BUILD_DIR)/build.log
+	yosys -l $(BUILD_DIR)/build.log -p "synth_ice40 -top top -blif $@" $^ 
 
 # asc
 $(BUILD_DIR)/%.asc: $(PIN_DEF) $(BUILD_DIR)/%.blif
@@ -43,7 +43,7 @@ debug:
 	gtkwave test.vcd gtk-ws2812.gtkw
 
 prog: $(BUILD_DIR)/$(PROJ).bin
-	iceprog $<
+	tinyprog -p $<
 
 formal:
 	sby -f $(PROJ).sby || gtkwave $(PROJ)/engine_0/*vcd hit_proc_formal.gtkw 

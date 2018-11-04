@@ -6,13 +6,13 @@ module top (
     output ws_data
 );
 
-    localparam NUM_LEDS = 100;
+    localparam NUM_LEDS = 8;
 
     reg reset = 1;
     always @(posedge clk)
         reset <= 0;
 
-    reg [14:0] count = 0;
+    reg [22:0] count = 0;
     reg [1:0]  color_ind = 0;
     always @(posedge clk) begin
         count <= count + 1;
@@ -35,6 +35,6 @@ module top (
     reg [7:0] led_num = 0;
     wire led_write = &count;
 
-    ws2812 #(.NUM_LEDS(NUM_LEDS)) ws2812_inst(.data(ws_data), .clk(clk), .reset(reset), .rgb_data(led_rgb_data), .led_num(led_num), .write(led_write));
+    ws2812 #(.NUM_LEDS(NUM_LEDS), .CLK_MHZ(16)) ws2812_inst(.data(ws_data), .clk(clk), .reset(reset), .rgb_data(led_rgb_data), .led_num(led_num), .write(led_write));
 
 endmodule
