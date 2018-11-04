@@ -1,6 +1,11 @@
 `default_nettype none
 
-//`define NO_MEM_RESET 1
+`ifdef FORMAL
+    `define NO_MEM_RESET 0
+`else
+    `define NO_MEM_RESET 1
+`endif
+
 
 module ws2812 (
     input [23:0] rgb_data,
