@@ -43,7 +43,7 @@ prog: $(PROJ).bin
 	iceprog $<
 
 formal:
-	sby -f $(PROJ).sby || gtkwave $(PROJ)/engine_0/*vcd hit_proc_formal.gtkw 
+	sby -f $(PROJ).sby || gtkwave $(PROJ)/engine_0/*vcd ws2812_formal.gtkw 
 
 
 clean:
