@@ -6,13 +6,13 @@ module top (
     output ws_data
 );
 
-    localparam NUM_LEDS = 100;
+    localparam NUM_LEDS = 8;
 
     reg reset = 1;
     always @(posedge clk)
         reset <= 0;
 
-    reg [14:0] count = 0;
+    reg [18:0] count = 0;
     reg [1:0]  color_ind = 0;
     always @(posedge clk) begin
         count <= count + 1;
