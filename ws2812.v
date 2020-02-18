@@ -8,11 +8,11 @@
 
 
 module ws2812 (
-    input [23:0] rgb_data,
-    input [7:0] led_num,
-    input write,
-    input reset,
-    input clk,  //12MHz
+    input wire [23:0] rgb_data,
+    input wire [7:0] led_num,
+    input wire write,
+    input wire reset,
+    input wire clk,  //12MHz
 
     output reg data
 );
@@ -139,50 +139,35 @@ module ws2812 (
         endcase
 
     `ifdef FORMAL
-        // start in reset
-        initial restrict(reset);
 
-        // past valid signal
-        reg f_past_valid = 0;
-        always @(posedge clk)
-            f_past_valid <= 1'b1;
+        default disable iff (reset);
+        default clocking f_clk @(posedge clk); endclocking
 
-        // check everything is zeroed on the reset signal
-        always @(posedge clk)
-            if (f_past_valid)
-                if ($past(reset)) begin
-                    assert(bit_counter == t_reset);
-                    assert(rgb_counter == 23);
-                    assert(state == STATE_RESET);
-                end
+        sequence data_state;
+            state == STATE_DATA && rgb_counter == 0 && bit_counter == 0;
+        endsequence
 
-        always @(posedge clk) begin
-            assert(bit_counter <= t_reset);
-            assert(rgb_counter <= 23);
-            assert(led_counter <= NUM_LEDS - 1);
+        sequence init_state;
+            bit_counter == t_reset && rgb_counter == 23 && state == STATE_RESET;
+        endsequence
+    
+        sequence run_state;
+            bit_counter <= t_reset && rgb_counter <= 23 && led_counter <= NUM_LEDS - 1;
+        endsequence
 
-            if(state == STATE_DATA) begin
-                assert(bit_counter <= t_period);
-                // led counter decrements
-                if($past(state) == STATE_DATA && $past(rgb_counter) == 0 && $past(bit_counter) == 0)
-                    assert(led_counter == $past(led_counter) - 1);
-            end
-
-            if(state == STATE_RESET) begin
-                assert(data == 0);
-                assert(bit_counter <= t_reset);
-            end
-        end
+        led_dec_count: assert property (data_state |-> ##1 led_counter == $past(led_counter) - 1'b1);
 
         // leds < NUM_LEDSs
-        always @(posedge clk)
-            assume(led_num < NUM_LEDS);
+        assume property (led_num < NUM_LEDS);
 
         // check that writes end up in the led register
-        always @(posedge clk)
-            if (f_past_valid)
-                if(!$past(reset) && $past(write))
-                    assert(led_reg[$past(led_num)] == $past(rgb_data));
+        write_data: assert property (write |-> ##1 led_reg[$past(led_num)] == $past(rgb_data));
+
+        // reset properties don't do anything - why?
+        reset_init: assert property (reset |-> ##1 init_state);
+
+        // reset properties don't do anything - why?
+        running: assert property (!reset |-> run_state);
             
     `endif
     
