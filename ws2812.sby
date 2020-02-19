@@ -1,6 +1,13 @@
+[tasks]
+proof
+cover
+
 [options]
-mode prove
-depth 30
+proof:mode prove
+proof:depth 30
+cover:mode cover
+cover:depth 30
+cover:append 100
 
 [engines]
 smtbmc

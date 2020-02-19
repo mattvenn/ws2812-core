@@ -1,18 +1,16 @@
 `default_nettype none
 
 `ifdef FORMAL
-    `define NO_MEM_RESET 0
-`else
-    `define NO_MEM_RESET 1
+    `define MEM_RESET
 `endif
 
 
 module ws2812 (
-    input [23:0] rgb_data,
-    input [7:0] led_num,
-    input write,
-    input reset,
-    input clk,  //12MHz
+    input wire [23:0] rgb_data,
+    input wire [7:0] led_num,
+    input wire write,
+    input wire reset,
+    input wire clk,  //12MHz
 
     output reg data
 );
@@ -63,6 +61,16 @@ module ws2812 (
 
     // handle reading new led data
     always @(posedge clk) begin
+	    //  In order to infer BRAM, can't have a reset condition
+	    //  like this. But it will fail formal if you don't reset
+	    //  it.
+            `ifdef MEM_RESET
+            // initialise led data to 0
+            if(reset)
+                for (i=0; i<NUM_LEDS; i=i+1)
+                    led_reg[i] <= 0;
+            else
+            `endif
         if(write)
             led_reg[led_num] <= rgb_data;
         led_color <= led_reg[led_counter];
@@ -70,19 +78,11 @@ module ws2812 (
 
     integer i;
 
+    (* anyseq *) wire [12:0] abstract_increment;
+
     always @(posedge clk)
         // reset
         if(reset) begin
-	    //  In order to infer BRAM, can't have a reset condition
-	    //  like this. But it will fail formal if you don't reset
-	    //  it.
-            `ifdef NO_MEM_RESET
-	    $display("Bypassing memory reset to allow BRAM");
-	    `else
-            // initialise led data to 0
-            for (i=0; i<NUM_LEDS; i=i+1)
-                led_reg[i] <= 0;
-	    `endif
 
             state <= STATE_RESET;
             bit_counter <= t_reset;
@@ -99,7 +99,7 @@ module ws2812 (
                 led_counter <= NUM_LEDS - 1;
                 data <= 0;
 
-                bit_counter <= bit_counter - 1;
+                bit_counter <= bit_counter - abstract_increment;
 
                 if(bit_counter == 0) begin
                     state <= STATE_DATA;
@@ -139,13 +139,15 @@ module ws2812 (
         endcase
 
     `ifdef FORMAL
-        // start in reset
-        initial restrict(reset);
 
         // past valid signal
         reg f_past_valid = 0;
-        always @(posedge clk)
+        always @(posedge clk) begin
             f_past_valid <= 1'b1;
+            // start in reset
+            if(!f_past_valid)
+                assume(reset);
+        end
 
         // check everything is zeroed on the reset signal
         always @(posedge clk)
@@ -183,7 +185,14 @@ module ws2812 (
             if (f_past_valid)
                 if(!$past(reset) && $past(write))
                     assert(led_reg[$past(led_num)] == $past(rgb_data));
-            
+
+        // cover targets
+        always @(posedge clk) begin
+//            cover(led_reg[1] == 24'hABCDEF);
+            cover(data && led_reg[7] == 24'hABCDEF);
+        end
+        
+
     `endif
     
 endmodule
