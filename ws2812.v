@@ -1,18 +1,15 @@
 `default_nettype none
 
-`ifdef FORMAL
-    `define NO_MEM_RESET 0
-`else
-    `define NO_MEM_RESET 1
+`ifndef FORMAL
+    `define NO_MEM_RESET
 `endif
 
-
 module ws2812 (
-    input [23:0] rgb_data,
-    input [7:0] led_num,
-    input write,
-    input reset,
-    input clk,  //12MHz
+    input wire [23:0] rgb_data,
+    input wire [7:0] led_num,
+    input wire write,
+    input wire reset,
+    input wire clk,  //12MHz
 
     output reg data
 );
@@ -61,28 +58,20 @@ module ws2812 (
 
     reg [23:0] led_color;
 
-    // handle reading new led data
-    always @(posedge clk) begin
-        if(write)
-            led_reg[led_num] <= rgb_data;
-        led_color <= led_reg[led_counter];
-    end
-
     integer i;
 
     always @(posedge clk)
         // reset
         if(reset) begin
-	    //  In order to infer BRAM, can't have a reset condition
-	    //  like this. But it will fail formal if you don't reset
-	    //  it.
+            // In order to infer BRAM, can't have a reset condition
+            // like this. But it will fail formal if you don't reset it.
             `ifdef NO_MEM_RESET
-	    $display("Bypassing memory reset to allow BRAM");
-	    `else
-            // initialise led data to 0
-            for (i=0; i<NUM_LEDS; i=i+1)
-                led_reg[i] <= 0;
-	    `endif
+                $display("Bypassing memory reset to allow BRAM");
+            `else
+                // initialise led data to 0
+                for (i=0; i<NUM_LEDS; i=i+1)
+                    led_reg[i] <= 0;
+            `endif
 
             state <= STATE_RESET;
             bit_counter <= t_reset;
@@ -91,99 +80,69 @@ module ws2812 (
             data <= 0;
 
         // state machine to generate the data output
-        end else case(state)
+        end else begin
+            // handle reading new led data
+            if(write)
+                led_reg[led_num] <= rgb_data;
+            led_color <= led_reg[led_counter];
 
-            STATE_RESET: begin
-                // register the input values
-                rgb_counter <= 5'd23;
-                led_counter <= NUM_LEDS - 1;
-                data <= 0;
+            case(state)
 
-                bit_counter <= bit_counter - 1;
+                STATE_RESET: begin
+                    // register the input values
+                    rgb_counter <= 5'd23;
+                    led_counter <= NUM_LEDS - 1;
+                    data <= 0;
 
-                if(bit_counter == 0) begin
-                    state <= STATE_DATA;
-                    bit_counter <= t_period;
-                end
-            end
+                    bit_counter <= bit_counter - 1;
 
-            STATE_DATA: begin
-                // output the data
-                if(led_color[rgb_counter])
-                    data <= bit_counter > (t_period - t_on);
-                else
-                    data <= bit_counter > (t_period - t_off);
-
-                // count the period
-                bit_counter <= bit_counter - 1;
-
-                // after each bit, increment rgb counter
-                if(bit_counter == 0) begin
-                    bit_counter <= t_period;
-                    rgb_counter <= rgb_counter - 1;
-
-                    if(rgb_counter == 0) begin
-                        led_counter <= led_counter - 1;
+                    if(bit_counter == 0) begin
+                        state <= STATE_DATA;
                         bit_counter <= t_period;
-                        rgb_counter <= 23;
-
-                        if(led_counter == 0) begin
-                            state <= STATE_RESET;
-                            led_counter <= NUM_LEDS - 1;
-                            bit_counter <= t_reset;
-                        end
                     end
-                end 
-            end
-
-        endcase
-
-    `ifdef FORMAL
-        // start in reset
-        initial restrict(reset);
-
-        // past valid signal
-        reg f_past_valid = 0;
-        always @(posedge clk)
-            f_past_valid <= 1'b1;
-
-        // check everything is zeroed on the reset signal
-        always @(posedge clk)
-            if (f_past_valid)
-                if ($past(reset)) begin
-                    assert(bit_counter == t_reset);
-                    assert(rgb_counter == 23);
-                    assert(state == STATE_RESET);
                 end
 
-        always @(posedge clk) begin
-            assert(bit_counter <= t_reset);
-            assert(rgb_counter <= 23);
-            assert(led_counter <= NUM_LEDS - 1);
+                STATE_DATA: begin
+                    // output the data
+                    if(led_color[rgb_counter])
+                        data <= bit_counter > (t_period - t_on);
+                    else
+                        data <= bit_counter > (t_period - t_off);
 
-            if(state == STATE_DATA) begin
-                assert(bit_counter <= t_period);
-                // led counter decrements
-                if($past(state) == STATE_DATA && $past(rgb_counter) == 0 && $past(bit_counter) == 0)
-                    assert(led_counter == $past(led_counter) - 1);
-            end
+                    // count the period
+                    bit_counter <= bit_counter - 1;
 
-            if(state == STATE_RESET) begin
-                assert(data == 0);
-                assert(bit_counter <= t_reset);
-            end
+                    // after each bit, increment rgb counter
+                    if(bit_counter == 0) begin
+                        bit_counter <= t_period;
+                        rgb_counter <= rgb_counter - 1;
+
+                        if(rgb_counter == 0) begin
+                            led_counter <= led_counter - 1;
+                            bit_counter <= t_period;
+                            rgb_counter <= 23;
+
+                            if(led_counter == 0) begin
+                                state <= STATE_RESET;
+                                led_counter <= NUM_LEDS - 1;
+                                bit_counter <= t_reset;
+                            end
+                        end
+                    end 
+                end
+
+            endcase
         end
 
-        // leds < NUM_LEDSs
-        always @(posedge clk)
-            assume(led_num < NUM_LEDS);
+    `ifdef FORMAL
+        reg f_past_valid = 0;
 
-        // check that writes end up in the led register
-        always @(posedge clk)
-            if (f_past_valid)
-                if(!$past(reset) && $past(write))
-                    assert(led_reg[$past(led_num)] == $past(rgb_data));
-            
+        // assume startup in reset
+        always @(posedge clk) begin
+            f_past_valid <= 1;
+            if(f_past_valid == 0)
+                assume(reset);
+        end
     `endif
     
 endmodule
