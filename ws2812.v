@@ -142,6 +142,8 @@ module ws2812 (
             f_past_valid <= 1;
             if(f_past_valid == 0)
                 assume(reset);
+
+        // your cover trace here
         end
     `endif
     
