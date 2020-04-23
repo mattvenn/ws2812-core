@@ -8,11 +8,11 @@
 
 
 module ws2812 (
-    input [23:0] rgb_data,
-    input [7:0] led_num,
-    input write,
-    input reset,
-    input clk,  //12MHz
+    input wire [23:0] rgb_data,
+    input wire [7:0] led_num,
+    input wire write,
+    input wire reset,
+    input wire clk,  //12MHz
 
     output reg data
 );
@@ -139,13 +139,15 @@ module ws2812 (
         endcase
 
     `ifdef FORMAL
-        // start in reset
-        initial restrict(reset);
-
         // past valid signal
         reg f_past_valid = 0;
         always @(posedge clk)
             f_past_valid <= 1'b1;
+
+        // start in reset
+        always @(posedge clk)
+            if(f_past_valid == 0)
+                assume(reset);
 
         // check everything is zeroed on the reset signal
         always @(posedge clk)

@@ -2,6 +2,7 @@ PACKAGE = ct256
 DEVICE = hx8k
 PROJ = ws2812
 PIN_DEF = 8k.pcf
+SEED = 10
 SHELL := /bin/bash # Use bash syntax
 BUILD_DIR = ./build
 SRC_DIR = ./
@@ -21,13 +22,12 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 # rules for building the blif file
-$(BUILD_DIR)/%.blif: $(SRC) | $(BUILD_DIR)
-	yosys -p "synth_ice40 -top top -blif $@" $^ | tee $(BUILD_DIR)/build.log
+$(BUILD_DIR)/%.json: $(SRC)
+	yosys -l $(BUILD_DIR)/build.log -p 'synth_ice40 -top top -json $(BUILD_DIR)/$(PROJ).json' $(SRC)
 
 # asc
-$(BUILD_DIR)/%.asc: $(PIN_DEF) $(BUILD_DIR)/%.blif
-	arachne-pnr --device 8k --package $(PACKAGE) -p $^ -o $@
-	#arachne-pnr -d $(subst hx,,$(subst lp,,$(DEVICE))) -o $@ -p $^
+$(BUILD_DIR)/%.asc: $(BUILD_DIR)/%.json $(PIN_DEF) 
+	nextpnr-ice40 -l $(BUILD_DIR)/nextpnr.log --seed $(SEED) --freq 20 --package $(PACKAGE) --$(DEVICE) --asc $@ --pcf $(PIN_DEF) --json $<
 
 # bin, for programming
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.asc
