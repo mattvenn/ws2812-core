@@ -40,11 +40,19 @@ module ws2812 (
         * reset is 800 counts             = 65us
 
     */
+    `ifdef COCOTB_SIM
+    parameter t_on = 5;
+    parameter t_off = 7;
+    localparam t_period = 10;
+    parameter t_reset = 20;
+    `else
     parameter t_on = $rtoi($ceil(CLK_MHZ*900/1000));
     parameter t_off = $rtoi($ceil(CLK_MHZ*350/1000));
     parameter t_reset = $rtoi($ceil(CLK_MHZ*280));
     localparam t_period = $rtoi($ceil(CLK_MHZ*1250/1000));
+    `endif
     localparam COUNT_BITS = $clog2(t_reset);
+
 
     initial data = 0;
 
@@ -189,3 +197,4 @@ module ws2812 (
     `endif
     
 endmodule
+`default_nettype wire
