@@ -23,11 +23,11 @@ $(BUILD_DIR):
 
 # rules for building the blif file
 $(BUILD_DIR)/%.json: $(SRC)
-	yosys -l $(BUILD_DIR)/build.log -p 'synth_ice40 -top top -json $(BUILD_DIR)/$(PROJ).json' $(SRC)
+	pru-yosys -l $(BUILD_DIR)/build.log -p 'synth_ice40 -top top -json $(BUILD_DIR)/$(PROJ).json' $(SRC)
 
 # asc
 $(BUILD_DIR)/%.asc: $(BUILD_DIR)/%.json $(PIN_DEF) 
-	nextpnr-ice40 -l $(BUILD_DIR)/nextpnr.log --seed $(SEED) --freq 20 --package $(PACKAGE) --$(DEVICE) --asc $@ --pcf $(PIN_DEF) --json $<
+	pru-nextpnr-ice40 -l $(BUILD_DIR)/nextpnr.log --seed $(SEED) --freq 20 --package $(PACKAGE) --$(DEVICE) --asc $@ --pcf $(PIN_DEF) --json $<
 
 # bin, for programming
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.asc

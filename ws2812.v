@@ -53,19 +53,16 @@ module ws2812 (
     `endif
     localparam COUNT_BITS = $clog2(t_reset);
 
-
-    initial data = 0;
-
     reg [23:0] led_reg [NUM_LEDS-1:0];
 
-    reg [LED_BITS-1:0] led_counter = 0;
-    reg [COUNT_BITS-1:0] bit_counter = 0;
-    reg [4:0] rgb_counter = 0;
+    reg [LED_BITS-1:0] led_counter;
+    reg [COUNT_BITS-1:0] bit_counter;
+    reg [4:0] rgb_counter;
 
     localparam STATE_DATA  = 0;
     localparam STATE_RESET = 1;
 
-    reg [1:0] state = STATE_RESET;
+    reg [1:0] state;
 
     reg [23:0] led_color;
 
