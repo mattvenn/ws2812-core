@@ -82,7 +82,7 @@ module ws2812 (
 	    //  like this. But it will fail formal if you don't reset
 	    //  it.
             `ifdef NO_MEM_RESET
-	    $display("Bypassing memory reset to allow BRAM");
+	    //  $display("Bypassing memory reset to allow BRAM");
 	    `else
             // initialise led data to 0
             for (i=0; i<NUM_LEDS; i=i+1)
