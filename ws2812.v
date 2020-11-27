@@ -17,7 +17,7 @@ module ws2812 (
     output reg data
 );
     parameter NUM_LEDS = 8;
-    parameter CLK_MHZ = 12;
+    parameter CLK_MHZ = 10;
     localparam LED_BITS = $clog2(NUM_LEDS);
 
     /*
