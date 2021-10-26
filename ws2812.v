@@ -143,6 +143,7 @@ module ws2812 (
 
         endcase
 
+    /*
     `ifdef FORMAL
         // past valid signal
         reg f_past_valid = 0;
@@ -192,6 +193,7 @@ module ws2812 (
                     assert(led_reg[$past(led_num)] == $past(rgb_data));
             
     `endif
+    */
     
 endmodule
 `default_nettype wire
