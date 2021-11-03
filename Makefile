@@ -14,6 +14,9 @@ MODULES = ws2812.v
 VERILOG = top.v $(MODULES)
 SRC = $(foreach ii,$(VERILOG),$(addprefix $(SRC_DIR)/, $(ii)))
 
+export COCOTB_REDUCED_LOG_FMT=1
+export LIBPYTHON_LOC=$(shell cocotb-config --libpython)
+
 # $@ The file name of the target of the rule.rule
 # $< first pre requisite
 # $^ names of all preerquisites
@@ -41,6 +44,17 @@ debug:
 	iverilog -o ws2812.out ws2812.v ws2812_tb.v
 	vvp ws2812.out -fst
 	gtkwave test.vcd gtk-ws2812.gtkw
+
+test:
+	rm -rf sim_build/
+	rm -f results.xml
+	mkdir sim_build/
+	iverilog -o sim_build/sim.vvp -s ws2812 -s dump -g2012 ws2812.v dump_ws2812.v
+	MODULE=test_ws2812 vvp -M $$(cocotb-config --prefix)/cocotb/libs -m libcocotbvpi_icarus sim_build/sim.vvp
+	! grep failure results.xml
+
+view:
+	gtkwave ws2812.vcd ws2812.gtkw
 
 prog: $(BUILD_DIR)/$(PROJ).bin
 	iceprog $<

@@ -1,0 +1,26 @@
+[*]
+[*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
+[*] Wed Nov  3 16:54:53 2021
+[*]
+[dumpfile] "/home/matt/work/asic-workshop/shuttle3-mpw-3/openlane/designs/wrapped_ws2812/ws2812_core/ws2812.vcd"
+[dumpfile_mtime] "Wed Nov  3 16:53:14 2021"
+[dumpfile_size] 24369
+[savefile] "/home/matt/work/asic-workshop/shuttle3-mpw-3/openlane/designs/wrapped_ws2812/ws2812_core/ws2812.gtkw"
+[timestart] 0
+[size] 1709 1080
+[pos] -1 -1
+*-21.000000 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 343
+[signals_width] 300
+[sst_expanded] 1
+[sst_vpaned_height] 322
+@28
+ws2812.reset
+ws2812.clk
+ws2812.write
+@29
+ws2812.data
+@22
+ws2812.led_color[23:0]
+[pattern_trace] 1
+[pattern_trace] 0
